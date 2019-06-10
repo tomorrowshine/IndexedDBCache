@@ -1,3 +1,3 @@
-import IDB from './src/IndexedDB';
+import IDB from './lib/IndexedDB';
 
 export default IDB;
