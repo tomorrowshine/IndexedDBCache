@@ -1,7 +1,7 @@
 {
   "name": "indexeddb-cache-json",
-  "version": "1.0.6",
-  "description": "匹配url，含义cache=true进行缓存，配合fetch请求优化数据加载",
+  "version": "1.0.9",
+  "description": "匹配url，含义cache=true进行缓存;匹配到cache=networkFirst 网络优先，离线走缓存，配合fetch请求优化数据加载",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

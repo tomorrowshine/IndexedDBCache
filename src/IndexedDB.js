@@ -1,9 +1,9 @@
 /*
- * @Description: IndexedDB缓存,url 匹配到cache=true即缓存
+ * @Description: IndexedDB缓存,url 匹配到cache=true即缓存;匹配到cache=networkFirst 网络优先，离线走缓存
  * @Author: licheng09
  * @Date: 2019-01-16 16:50:40
  * @LastEditors: licheng09
- * @LastEditTime: 2019-06-04 10:33:04
+ * @LastEditTime: 2019-08-27 14:23:43
  */
 const logPrefix = ['%cIDB', 'background: green; color: white; padding: 2px 0.5em; '.concat('border-radius: 0.5em;')];
 const debug = window.location.hostname === 'localhost';
@@ -40,7 +40,7 @@ const myDB = {
     },
     setItem: (db, table, key, value) => {
         try {
-            if (/cache=true/.test(key) && value) {
+            if ((/cache=true/.test(key) || /cache=networkFirst/.test(key)) && value) {
                 debug && console.log(...logPrefix, 'Router is responding to:', key);
                 myDB.getStore(db, table).put({ timestamp: Date.now(), url: key, data: value });
             }
@@ -50,24 +50,36 @@ const myDB = {
     },
     getItem: (db, table, key) => new Promise((resolve) => {
         try {
-            if (!/cache=true/.test(key)) {
-                resolve();
-                return;
-            }
             const obj = {
                 data: {},
                 type: 'indexedDB',
             };
-            myDB.getStore(db, table).get(key).onsuccess = function (e) {
-                if (e.target.result) {
-                    debug && console.log(...logPrefix, 'Using StaleWhileRevalidate to is responding to:', key);
-                    obj.data = e.target.result.data || {};
-                    resolve(obj);
-                } else {
-                    debug && console.log(...logPrefix, 'no data', 'Using StaleWhileRevalidate to is responding to:', key);
-                    resolve();
-                }
-            };
+            if (/cache=true/.test(key)) {
+                myDB.getStore(db, table).get(key).onsuccess = function (e) {
+                    if (e.target.result) {
+                        debug && console.log(...logPrefix, 'Using StaleWhileRevalidate to is responding to:', key);
+                        obj.data = e.target.result.data || {};
+                        resolve(obj);
+                    } else {
+                        debug && console.log(...logPrefix, 'no data', 'Using StaleWhileRevalidate to is responding to:', key);
+                        resolve();
+                    }
+                };
+            } else if (/cache=networkFirst/.test(key) && navigator.onLine === false) {
+                myDB.getStore(db, table).get(key).onsuccess = function (e) {
+                    if (e.target.result) {
+                        debug && console.log(...logPrefix, 'Using NetworkFirst to is responding to:', key);
+                        obj.data = e.target.result.data || {};
+                        resolve(obj);
+                    } else {
+                        debug && console.log(...logPrefix, 'no data', 'Using NetworkFirst to is responding to:', key);
+                        resolve();
+                    }
+                };
+            } else {
+                resolve();
+                return;
+            }
         } catch (error) {
             console.error(error);
             resolve();
@@ -75,7 +87,7 @@ const myDB = {
     }),
     removeItem: (db, table, key) => {
         try {
-            if (/cache=true/.test(key)) {
+            if (/cache=true/.test(key) || /cache=networkFirst/.test(key)) {
                 myDB.getStore(db, table).delete(key);
             }
         } catch (error) {
@@ -146,13 +158,13 @@ const _IDB = {
         }
     },
     getDB: () => ({
-        setItem: () => {},
+        setItem: () => { },
         getItem: async () => null,
-        removeItem: () => {},
+        removeItem: () => { },
         clearTable: async () => null,
     }),
-    closeDB: () => {},
-    deleteDB: () => {},
+    closeDB: () => { },
+    deleteDB: () => { },
 
 };
 

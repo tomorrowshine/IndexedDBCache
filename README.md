@@ -1,4 +1,4 @@
-匹配url，含义cache=true进行缓存，配合fetch请求优化数据加载
+匹配url，含义cache=true进行缓存;匹配到cache=networkFirst 网络优先，离线走缓存, 配合fetch请求优化数据加载
 
 // 不支持serviceWorker则启用IndexedDB
 
